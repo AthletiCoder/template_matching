@@ -2,15 +2,17 @@
 ### Used to find if a large input image contains smaller template images
 
 ## Requirements
-* Python3
-* Install the following libraries
-    * OpenCV
-    * Numpy
-    * Kivy
-* Put all the template images in a folder on the same level as template_matching.py
+* Install python3 and pip3
+* Install the requirements of the project using the command `pip3 install -r requirements.txt` at root level of project
+* Put all the template images in a folder in root level
 
 ## Usage
+
+### For Command line interface
 `python3 template_matching.py -t <TEMPLATES_DIR> -i <INPUT_PATH> -v`
+
+### For Graphical user interface
+`python3 main.py`
 
 ## Results
 A csv file showing the results will be created

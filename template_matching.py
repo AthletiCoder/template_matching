@@ -8,7 +8,7 @@ from os import listdir
 from os.path import isfile, join
 import csv
 
-def match_template(input_file, template_dir, template_file, visualize):
+def helper(input_file, template_dir, template_file, visualize):
 	# load the image image, convert it to grayscale, and detect edges
 	template = cv2.imread(os.path.join(template_dir,template_file))
 	template = cv2.cvtColor(template, cv2.COLOR_BGR2GRAY)
@@ -57,7 +57,7 @@ def match_template(input_file, template_dir, template_file, visualize):
 		cv2.imwrite("results/"+i+"_"+t+".jpg", image)
 	return maxVal, r
 
-def wrapper(args):
+def match_template(args):
 	'''
 	input : all cli arguments
 	output : error
@@ -70,15 +70,18 @@ def wrapper(args):
 	(_, _, files) = next(os.walk(template_dir))
 	# remove dot files
 	image_files = [f for f in files if not f.startswith(".")]
-	# match template for each file found	
+	# match template for each file found
+	print("-----------------------------------------")
 	with open('results.csv', mode='w') as results_file:
 		writer = csv.writer(results_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
 		writer.writerow(["Input image", "Template image", "Found", "Correlation", "Scale"])
 		for template in image_files:
 			print("Looking for %s in %s" %(template, args["inputpath"]))
-			match_idx, scale = match_template(args["inputpath"], template_dir,template, args["visualize"])
+			match_idx, scale = helper(args["inputpath"], template_dir,template, args["visualize"])
 			
 			writer.writerow([args["inputpath"], template, match_idx>0.15, match_idx, scale])
+	print("-----------------------------------------")
+	return None
 
 
 if __name__=="__main__":
@@ -89,7 +92,8 @@ if __name__=="__main__":
 	ap.add_argument("-i", "--inputpath", required=True, help="Path to image where template will be matched")
 	ap.add_argument("-v", "--visualize", action="store_true")
 	args = vars(ap.parse_args())
-	err = wrapper(args)
+	print(args)
+	err = match_template(args)
 	if err:
 		print("ERROR: " + err)
 	elif args["visualize"]:

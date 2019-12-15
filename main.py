@@ -1,5 +1,5 @@
-import gui
-import template_matching as TM
+from gui_pygame import init_gui
 
 if __name__ == "__main__":
-    gui.top.mainloop()
+    app = init_gui()
+    app.mainloop()
