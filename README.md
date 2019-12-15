@@ -21,4 +21,4 @@ A csv file showing the results will be created
 |large_image.tif| small1.jpg | TRUE  | 0.06805718   | 0.8333 |
 
 A folder with best found matches of the templates is shown as follows
-![alt text](https://github.com/AthletiCoder/template_matching/tree/gui/sample_result.jpg "Logo Title Text 1")
+![alt text](https://github.com/AthletiCoder/template_matching/blob/gui/sample_result.jpg "Logo Title Text 1")
