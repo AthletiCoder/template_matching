@@ -3,10 +3,16 @@ import cv2
 from matplotlib import pyplot as plt
 import sys
 
-MIN_MATCH_COUNT = 10
+MIN_MATCH_COUNT = 15
+
+def resize(img, ratio):
+    ret = cv2.resize(img,(0,0),fx=ratio,fy=ratio,interpolation=cv2.INTER_NEAREST)
+    return ret
 
 query = cv2.imread(sys.argv[1],0) # query image 
 template = cv2.imread(sys.argv[2],0) # template 
+
+query = resize(query,0.1)
 
 # Initiate SIFT detector
 sift = cv2.xfeatures2d.SIFT_create()
@@ -29,10 +35,11 @@ for m,n in matches:
     if m.distance < 0.7*n.distance:
         good.append(m)
 
-if len(good)>MIN_MATCH_COUNT:
+if len(good)>= MIN_MATCH_COUNT:
+    print("Match found, check results folder")
     src_pts = np.float32([ kp1[m.queryIdx].pt for m in good ]).reshape(-1,1,2)
     dst_pts = np.float32([ kp2[m.trainIdx].pt for m in good ]).reshape(-1,1,2)
-
+    '''
     M, mask = cv2.findHomography(src_pts, dst_pts, cv2.RANSAC,5.0)
     matchesMask = mask.ravel().tolist()
 
@@ -41,27 +48,24 @@ if len(good)>MIN_MATCH_COUNT:
     dst = cv2.perspectiveTransform(pts,M)
 
     template = cv2.polylines(template,[np.int32(dst)],True,255,3, cv2.LINE_AA)
+    '''
 else:
-    print("Not enough matches are found - %d/%d" % (len(good),MIN_MATCH_COUNT))
-    sys.exit("Not found")
+    print("Not enough matching points were found - %d/%d" % (len(good),MIN_MATCH_COUNT))
+    sys.exit("Match not found")
     matchesMask = None
 
-draw_params = dict(matchColor = (0,255,0), # draw matches in green color
-                   singlePointColor = None,
-                   matchesMask = matchesMask, # draw only inliers
-                   flags = 2)
+# draw_params = dict(matchColor = (0,255,0), singlePointColor = None,matchesMask=matchesMask,flags = 2)
+# img3 = cv2.drawMatches(query,kp1,template,kp2,good,None,**draw_params)
+# cv2.imwrite('results/output.jpg',img3)
 
 H, W = template.shape
 bounds = np.float32([[0,0],[W-1,H-1]]).reshape(-1,1,2)
 inv_M, _ = cv2.findHomography(dst_pts, src_pts, cv2.RANSAC, 5.0)
 rect = cv2.perspectiveTransform(bounds,inv_M)
 
-img3 = cv2.drawMatches(query,kp1,template,kp2,good,None,**draw_params)
 p1 = tuple(rect[0][0]) 
 p2 = tuple(rect[1][0])
 cv2.rectangle(query,p1,p2, (0,0,255),1)
-print(p1)
-print(p2)
+# print(p1)
+# print(p2)
 cv2.imwrite('results/found.jpg',query)
-
-cv2.imwrite('results/output.jpg',img3)
