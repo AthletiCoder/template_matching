@@ -1,18 +1,19 @@
 import numpy as np
 import cv2
 from matplotlib import pyplot as plt
+import sys
 
 MIN_MATCH_COUNT = 10
 
-img1 = cv2.imread('test.jpg',0)          # queryImage
-img2 = cv2.imread('temp.jpg',0) # trainImage
+query = cv2.imread(sys.argv[1],0) # query image 
+template = cv2.imread(sys.argv[2],0) # template 
 
 # Initiate SIFT detector
 sift = cv2.xfeatures2d.SIFT_create()
 
 # find the keypoints and descriptors with SIFT
-kp1, des1 = sift.detectAndCompute(img1,None)
-kp2, des2 = sift.detectAndCompute(img2,None)
+kp1, des1 = sift.detectAndCompute(query,None)
+kp2, des2 = sift.detectAndCompute(template,None)
 
 FLANN_INDEX_KDTREE = 0
 index_params = dict(algorithm = FLANN_INDEX_KDTREE, trees = 5)
@@ -35,13 +36,14 @@ if len(good)>MIN_MATCH_COUNT:
     M, mask = cv2.findHomography(src_pts, dst_pts, cv2.RANSAC,5.0)
     matchesMask = mask.ravel().tolist()
 
-    h,w = img1.shape
+    h,w = query.shape
     pts = np.float32([ [0,0],[0,h-1],[w-1,h-1],[w-1,0] ]).reshape(-1,1,2)
     dst = cv2.perspectiveTransform(pts,M)
 
-    img2 = cv2.polylines(img2,[np.int32(dst)],True,255,3, cv2.LINE_AA)
+    template = cv2.polylines(template,[np.int32(dst)],True,255,3, cv2.LINE_AA)
 else:
     print("Not enough matches are found - %d/%d" % (len(good),MIN_MATCH_COUNT))
+    sys.exit("Not found")
     matchesMask = None
 
 draw_params = dict(matchColor = (0,255,0), # draw matches in green color
@@ -49,14 +51,17 @@ draw_params = dict(matchColor = (0,255,0), # draw matches in green color
                    matchesMask = matchesMask, # draw only inliers
                    flags = 2)
 
-H, W = img2.shape
-bounds = np.float32([[0,0],[h-1,w-1]]).reshape(-1,1,2)
+H, W = template.shape
+bounds = np.float32([[0,0],[W-1,H-1]]).reshape(-1,1,2)
 inv_M, _ = cv2.findHomography(dst_pts, src_pts, cv2.RANSAC, 5.0)
 rect = cv2.perspectiveTransform(bounds,inv_M)
 
-img3 = cv2.drawMatches(img1,kp1,img2,kp2,good,None,**draw_params)
+img3 = cv2.drawMatches(query,kp1,template,kp2,good,None,**draw_params)
+p1 = tuple(rect[0][0]) 
+p2 = tuple(rect[1][0])
+cv2.rectangle(query,p1,p2, (0,0,255),1)
+print(p1)
+print(p2)
+cv2.imwrite('results/found.jpg',query)
 
-cv2.rectangle(img1,tuple(rect[0][0]),tuple(rect[1][0]), (0,0,255),10)
-cv2.imwrite('found.jpg',img1)
-
-cv2.imwrite('output.jpg',img3)
+cv2.imwrite('results/output.jpg',img3)

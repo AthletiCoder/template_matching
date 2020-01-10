@@ -2,7 +2,7 @@
 ### Used to find if a large input image contains smaller template images
 
 ## Requirements
-* Install python3 and pip3
+* python version 3.6.8 
 * Install the requirements of the project using the command `pip3 install -r requirements.txt` at root level of project
 * Put all the template images in a folder in root level
 
