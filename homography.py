@@ -3,7 +3,9 @@ import cv2
 from matplotlib import pyplot as plt
 import sys
 
-MIN_MATCH_COUNT = 15
+# https://mybinder.org/v2/gh/ipython/ipython-in-depth/7e5ce96cc9251083979efdfc393425f1229a4a68
+
+MIN_MATCH_COUNT = 30
 
 def resize(img, ratio):
     ret = cv2.resize(img,(0,0),fx=ratio,fy=ratio,interpolation=cv2.INTER_NEAREST)
@@ -12,7 +14,7 @@ def resize(img, ratio):
 query = cv2.imread(sys.argv[1],0) # query image 
 template = cv2.imread(sys.argv[2],0) # template 
 
-query = resize(query,0.1)
+query = resize(query,0.2)
 
 # Initiate SIFT detector
 sift = cv2.xfeatures2d.SIFT_create()
@@ -36,6 +38,7 @@ for m,n in matches:
         good.append(m)
 
 if len(good)>= MIN_MATCH_COUNT:
+    print("Number of matching points: ", len(good))
     print("Match found, check results folder")
     src_pts = np.float32([ kp1[m.queryIdx].pt for m in good ]).reshape(-1,1,2)
     dst_pts = np.float32([ kp2[m.trainIdx].pt for m in good ]).reshape(-1,1,2)
