@@ -1,4 +1,5 @@
 import numpy as np
+import math
 import cv2
 from matplotlib import pyplot as plt
 import sys
@@ -12,18 +13,25 @@ def resize(img, ratio):
     return ret
 
 query = cv2.imread(sys.argv[1],0) # query image 
+q_h, q_w = query.shape[:2]
 template = cv2.imread(sys.argv[2],0) # template 
+t_h, t_w = template.shape[:2]
+print(t_h)
 
-query = resize(query,0.2)
+query = resize(query,0.5)
 
 # Initiate SIFT detector
-sift = cv2.xfeatures2d.SIFT_create()
+orb = cv2.ORB_create(nfeatures=10000)
 
 # find the keypoints and descriptors with SIFT
-kp1, des1 = sift.detectAndCompute(query,None)
-kp2, des2 = sift.detectAndCompute(template,None)
+kp1, des1 = orb.detectAndCompute(query,None)
+kp2, des2 = orb.detectAndCompute(template,None)
 
-FLANN_INDEX_KDTREE = 0
+bf = cv2.BFMatcher(cv2.NORM_HAMMING, crossCheck=True)
+matches = bf.match(des1,des2)
+print(len(matches)/math.sqrt(q_h*q_w*t_h*t_w))
+
+'''FLANN_INDEX_KDTREE = 0
 index_params = dict(algorithm = FLANN_INDEX_KDTREE, trees = 5)
 search_params = dict(checks = 50)
 
@@ -42,7 +50,6 @@ if len(good)>= MIN_MATCH_COUNT:
     print("Match found, check results folder")
     src_pts = np.float32([ kp1[m.queryIdx].pt for m in good ]).reshape(-1,1,2)
     dst_pts = np.float32([ kp2[m.trainIdx].pt for m in good ]).reshape(-1,1,2)
-    '''
     M, mask = cv2.findHomography(src_pts, dst_pts, cv2.RANSAC,5.0)
     matchesMask = mask.ravel().tolist()
 
@@ -51,7 +58,6 @@ if len(good)>= MIN_MATCH_COUNT:
     dst = cv2.perspectiveTransform(pts,M)
 
     template = cv2.polylines(template,[np.int32(dst)],True,255,3, cv2.LINE_AA)
-    '''
 else:
     print("Not enough matching points were found - %d/%d" % (len(good),MIN_MATCH_COUNT))
     sys.exit("Match not found")
@@ -72,3 +78,4 @@ cv2.rectangle(query,p1,p2, (0,0,255),1)
 # print(p1)
 # print(p2)
 cv2.imwrite('results/found.jpg',query)
+'''
